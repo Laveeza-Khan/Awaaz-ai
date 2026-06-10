@@ -38,22 +38,33 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* Backgrounds */
-    [data-testid="stAppViewContainer"] { background-color: #041736 !important; }
+    /* 1. Main Background */
+    [data-testid="stAppViewContainer"] {
+        background-color: #041736 !important;
+    }
     
-    /* Card Styling */
-    .card {
-        background-color: #0d2d5e !important;
-        padding: 25px !important;
-        border-radius: 12px !important;
-        border: 1px solid #d9ed91 !important;
-        margin-bottom: 20px !important;
-        color: #eaffb8 !important; /* Yahan se text ka color set ho raha hai */
+    /* 2. Sidebar Background */
+    [data-testid="stSidebar"] {
+        background-color: #041736 !important;
     }
 
-    /* Force Text Color Everywhere */
-    .stApp, .stMarkdown, p, div, label, h1, h2, h3 {
-        color: #eaffb8 !important;
+    /* 3. Text Color (Slightly lighter than pure white for professional look) */
+    .stApp, p, div, label, h1, h2, h3, .stMetric {
+        color: #FFFFFF !important;
+    }
+
+    /* 4. Card Styling (The boxes in your UI) */
+    .card {
+        background-color: #0a2550 !important;
+        padding: 25px !important;
+        border-radius: 12px !important;
+        border: 1px solid #1e407c !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* 5. Sidebar Text Color Fix */
+    [data-testid="stSidebar"] * {
+        color: #FFFFFF !important;
     }
     </style>
 """, unsafe_allow_html=True)
