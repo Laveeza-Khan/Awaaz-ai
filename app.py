@@ -38,39 +38,27 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* 1. Main Background */
-    [data-testid="stAppViewContainer"] { background-color: #041736 !important; }
-    [data-testid="stSidebar"] { background-color: #041736 !important; }
-
-    /* 2. All Text Color */
-    .stApp, p, div, label, h1, h2, h3, .stMetric, .stSidebar, span {
-        color: #eaffb8 !important;
-    }
-
-    /* 3. Input Boxes & Text Areas (Darkening the input boxes) */
-    div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="textarea"] {
+    /* 1. Force all Streamlit input/select backgrounds to Dark Blue */
+    div[data-baseweb="select"] > div, 
+    div[data-baseweb="base-input"] > div,
+    input, textarea {
         background-color: #0d2d5e !important;
+        color: #eaffb8 !important;
         border: 1px solid #d9ed91 !important;
     }
     
-    /* 4. Text color inside Input Boxes */
-    input, textarea, div[data-baseweb="select"] span {
+    /* 2. Force the placeholder text color */
+    ::placeholder {
         color: #eaffb8 !important;
+        opacity: 0.6;
     }
-
-    /* 5. Dropdown Menu Text */
+    
+    /* 3. Dropdown options background */
     div[role="listbox"] {
-        background-color: #041736 !important;
-        color: #eaffb8 !important;
-    }
-
-    /* 6. Card Styling */
-    .card {
         background-color: #0d2d5e !important;
-        padding: 25px !important;
-        border-radius: 12px !important;
-        border: 1px solid #d9ed91 !important;
-        margin-bottom: 20px !important;
+    }
+    div[role="option"] {
+        color: #eaffb8 !important;
     }
     </style>
 """, unsafe_allow_html=True)
