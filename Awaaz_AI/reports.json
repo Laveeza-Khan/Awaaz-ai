@@ -1,0 +1,56 @@
+[
+  {
+    "case_id": "AWZ-9978499C",
+    "department": "Finance",
+    "severity": "HIGH",
+    "policy": "Fair Labor Standards & Anti-Retaliation Policy Clause 3"
+  },
+  {
+    "case_id": "AWZ-B2A99CFA",
+    "department": "Facilities",
+    "severity": "HIGH",
+    "policy": "Fair Labor Standards & Anti-Retaliation Policy Clause 3"
+  },
+  {
+    "case_id": "AWZ-93A0494A",
+    "department": "Human Resources",
+    "severity": "HIGH",
+    "policy": "Anti-Harassment Guidelines"
+  },
+  {
+    "case_id": "AWZ-67CE5D18",
+    "department": "Human Resources",
+    "severity": "HIGH",
+    "policy": "Wage and Hour Laws"
+  },
+  {
+    "case_id": "AWZ-602D3576",
+    "department": "Human Resources",
+    "severity": "HIGH",
+    "policy": "Anti-Harassment Guidelines"
+  },
+  {
+    "case_id": "AWZ-6EC6AB54",
+    "department": "Finance",
+    "severity": "HIGH",
+    "policy": "Anti-Harassment and Respectful Workplace Policy"
+  },
+  {
+    "case_id": "AWZ-666EF39C",
+    "department": "Finance",
+    "severity": "HIGH",
+    "policy": "Anti-Harassment Guidelines"
+  },
+  {
+    "case_id": "AWZ-EB85077B",
+    "department": "Human Resources",
+    "severity": "HIGH",
+    "policy": "Wage Payment Policy"
+  },
+  {
+    "case_id": "AWZ-978D66F4",
+    "department": "Sales",
+    "severity": "HIGH",
+    "policy": "Respectful Workplace Policy"
+  }
+]
