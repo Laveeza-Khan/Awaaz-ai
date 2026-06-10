@@ -44,27 +44,54 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* 1. Force all Streamlit input/select backgrounds to Dark Blue */
-    div[data-baseweb="select"] > div, 
-    div[data-baseweb="base-input"] > div,
-    input, textarea {
+    /* 1. Global Page Background */
+    [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
+        background-color: #041736 !important;
+    }
+
+    /* 2. All Text Color - Global Force */
+    .stApp, p, div, label, h1, h2, h3, .stMetric, .stSidebar, span, li {
+        color: #eaffb8 !important;
+    }
+
+    /* 3. Cards */
+    .card {
         background-color: #0d2d5e !important;
+        padding: 25px !important;
+        border-radius: 12px !important;
+        border: 1px solid #d9ed91 !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 4. Input Fields, Selectboxes, and Textareas */
+    [data-baseweb="select"] > div, 
+    [data-baseweb="base-input"] > div,
+    textarea, 
+    div[role="combobox"] {
+        background-color: #041736 !important;
         color: #eaffb8 !important;
         border: 1px solid #d9ed91 !important;
     }
-    
-    /* 2. Force the placeholder text color */
-    ::placeholder {
-        color: #eaffb8 !important;
-        opacity: 0.6;
-    }
-    
-    /* 3. Dropdown options background */
+
+    /* 5. Dropdown Menu Background Fix */
     div[role="listbox"] {
         background-color: #0d2d5e !important;
     }
     div[role="option"] {
         color: #eaffb8 !important;
+    }
+
+    /* 6. Button Fix */
+    button {
+        background-color: #d9ed91 !important;
+        color: #041736 !important;
+        font-weight: bold !important;
+    }
+
+    /* 7. Label Fix */
+    label {
+        color: #d9ed91 !important; 
+        font-weight: 600 !important;
     }
     </style>
 """, unsafe_allow_html=True)
