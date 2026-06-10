@@ -10,6 +10,15 @@ genai.configure(api_key=api_key)
 
 DATA_FILE = Path(__file__).resolve().parent / "reports.json"
 
+def load_policy_kb():
+    try:
+        with open("policy_kb.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"General": "Follow standard company conduct."}
+
+policy_kb = load_policy_kb()
+
 # Local storage helpers for anonymous pattern detection
 
 def load_report_history():
@@ -171,12 +180,13 @@ with tab1:
                         st.error("Cannot process report: Gemini API key missing. Add GOOGLE_GEMINI_API_KEY to Streamlit secrets.")
                     else:
                         try:
+                            policy_context = json.dumps(policy_kb)
                             easy_prompt = f"""
                             You are a helpful HR Compliance officer. Analyze this raw workplace complaint.
 
                             Tasks:
                             1. Translate the main complaint clearly into simple, professional, corporate English. Keep sentences simple and easy to understand.
-                            2. Remove all personal identifiers like names of people, cities, or direct contact details. Replace them EXACTLY with structural HTML tags: '<span class=\"redacted-tag\">[EMPLOYEE]</span>', '<span class=\"redacted-tag\">[SUPERVISOR]</span>', or '<span class=\"redacted-tag\">[LOCATION]</span>'.
+                            2. Remove all personal identifiers like names of people, cities, or direct contact details. Replace them EXACTLY with structural HTML tags: '<span class=\"redacted-tag[...]
                             3. Set Severity Level as either HIGH, MEDIUM, or LOW.
                             4. Identify which standard workplace policy this violates (e.g., Anti-Harassment Guidelines, Fair Labor Standards Code).
 
@@ -191,7 +201,10 @@ with tab1:
                             """
 
                             model = genai.GenerativeModel('gemini-2.5-flash')
-                            response = model.generate_content(easy_prompt)
+                            response = model.generate_content(
+                                easy_prompt,
+                                generation_config={"response_mime_type": "application/json"}
+                            )
 
                             clean_json = response.text.strip().replace("```json", "").replace("```", "")
                             parsed_data = json.loads(clean_json)
@@ -238,7 +251,7 @@ with tab1:
                             )
 
                             st.markdown(
-                                f"<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS tunnel to the <strong>{send_to}</strong> compliance mail server.</div>",
+                                f"<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS tunnel to[...]
                                 unsafe_allow_html=True,
                             )
 
