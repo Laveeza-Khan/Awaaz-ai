@@ -38,39 +38,39 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* 1. Page Background (Dark Blue) */
-    [data-testid="stAppViewContainer"] {
-        background-color: #041736 !important;
-    }
-    
-    /* 2. Sidebar Background */
-    [data-testid="stSidebar"] {
-        background-color: #041736 !important;
-    }
+    /* 1. Main Background */
+    [data-testid="stAppViewContainer"] { background-color: #041736 !important; }
+    [data-testid="stSidebar"] { background-color: #041736 !important; }
 
-    /* 3. Text Color (The exact Soft Green/Cream color from your picture) */
+    /* 2. All Text Color */
     .stApp, p, div, label, h1, h2, h3, .stMetric, .stSidebar, span {
         color: #eaffb8 !important;
     }
 
-    /* 4. Card Styling (Slightly darker blue for contrast) */
+    /* 3. Input Boxes & Text Areas (Darkening the input boxes) */
+    div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="textarea"] {
+        background-color: #0d2d5e !important;
+        border: 1px solid #d9ed91 !important;
+    }
+    
+    /* 4. Text color inside Input Boxes */
+    input, textarea, div[data-baseweb="select"] span {
+        color: #eaffb8 !important;
+    }
+
+    /* 5. Dropdown Menu Text */
+    div[role="listbox"] {
+        background-color: #041736 !important;
+        color: #eaffb8 !important;
+    }
+
+    /* 6. Card Styling */
     .card {
         background-color: #0d2d5e !important;
         padding: 25px !important;
         border-radius: 12px !important;
         border: 1px solid #d9ed91 !important;
         margin-bottom: 20px !important;
-    }
-    
-    /* 5. Sidebar Text Color Fix */
-    [data-testid="stSidebar"] * {
-        color: #eaffb8 !important;
-    }
-
-    /* 6. Button and Input field text fix */
-    .stButton>button {
-        color: #041736 !important;
-        background-color: #eaffb8 !important;
     }
     </style>
 """, unsafe_allow_html=True)
