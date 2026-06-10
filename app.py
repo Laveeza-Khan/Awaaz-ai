@@ -5,13 +5,14 @@ import secrets
 from pathlib import Path
 
 # Load key from Streamlit native secrets
-api_key = st.secrets["GOOGLE_GEMINI_API_KEY"]
-genai.configure(api_key=api_key)
+api_key = st.secrets.get("GOOGLE_GEMINI_API_KEY", None)
+if api_key:
+    genai.configure(api_key=api_key)
 
+# Local storage path
 DATA_FILE = Path(__file__).resolve().parent / "reports.json"
 
-# Local storage helpers for anonymous pattern detection
-
+# Local storage helpers with robust error handling for cloud environments
 def load_report_history():
     if DATA_FILE.exists():
         try:
@@ -21,13 +22,18 @@ def load_report_history():
             return []
     return []
 
-
 def save_report(report_entry):
-    history = load_report_history()
-    history.append(report_entry)
-    with DATA_FILE.open("w", encoding="utf-8") as fh:
-        json.dump(history, fh, indent=2)
-
+    try:
+        history = load_report_history()
+        history.append(report_entry)
+        with DATA_FILE.open("w", encoding="utf-8") as fh:
+            json.dump(history, fh, indent=2)
+        return True
+    except OSError as e:
+        # Cloud environments (like Streamlit Cloud) might block local file writing.
+        # This prevents the app from crashing entirely.
+        print(f"File writing blocked by cloud environment: {e}")
+        return False
 
 # 1. Page Configuration
 st.set_page_config(
@@ -181,6 +187,10 @@ with tab1:
                     if not api_key:
                         st.error("Cannot process report: Gemini API key missing. Add GOOGLE_GEMINI_API_KEY to Streamlit secrets.")
                     else:
+                        final_text_report = None
+                        final_severity = None
+                        final_policy = None
+                        
                         try:
                             easy_prompt = f"""
                             You are a helpful HR Compliance officer. Analyze this raw workplace complaint.
@@ -202,23 +212,18 @@ with tab1:
                             """
 
                             model = genai.GenerativeModel('gemini-2.5-flash')
-                            response = model.generate_content(easy_prompt)
+                            # Forcing JSON output structure from Gemini API
+                            response = model.generate_content(
+                                easy_prompt,
+                                generation_config={"response_mime_type": "application/json"}
+                            )
 
-                            clean_json = response.text.strip().replace("```json", "").replace("```", "")
-                            parsed_data = json.loads(clean_json)
-
+                            parsed_data = json.loads(response.text.strip())
                             final_text_report = parsed_data.get("redacted_text", "")
                             final_severity = parsed_data.get("severity_score", "").upper()
                             final_policy = parsed_data.get("policy_mapping", "")
                         except Exception as e:
-                            status_code = getattr(e, 'code', None) or getattr(e, 'status_code', None)
-                            if status_code in (400, 401):
-                                st.error("AI request failed with status 400/401. Please verify your Gemini API key and request configuration.")
-                            else:
-                                st.error(f"AI processing error: {e}")
-                            final_text_report = None
-                            final_severity = None
-                            final_policy = None
+                            st.error(f"AI processing error: {e}")
 
                         if not final_text_report:
                             st.error("AI did not return a valid report. Please try again later.")
