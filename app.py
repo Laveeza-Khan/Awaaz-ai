@@ -38,19 +38,25 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    /* Backgrounds */
     [data-testid="stAppViewContainer"] { background-color: #041736 !important; }
-    [data-testid="stSidebar"] { background-color: #0a2550 !important; }
-    body, .stApp { background-color: #041736 !important; color: #eaffb8 !important; }
+    
+    /* Card Styling */
     .card {
         background-color: #0d2d5e !important;
         padding: 25px !important;
         border-radius: 12px !important;
         border: 1px solid #d9ed91 !important;
         margin-bottom: 20px !important;
+        color: #eaffb8 !important; /* Yahan se text ka color set ho raha hai */
+    }
+
+    /* Force Text Color Everywhere */
+    .stApp, .stMarkdown, p, div, label, h1, h2, h3 {
+        color: #eaffb8 !important;
     }
     </style>
 """, unsafe_allow_html=True)
-
 
 def pill_badge(text, bg="#EFF6FF", color="#1E3A8A"):
     return (
