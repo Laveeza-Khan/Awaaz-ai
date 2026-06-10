@@ -4,356 +4,78 @@ import json
 import secrets
 from pathlib import Path
 
-# Load key from Streamlit native secrets
+# --- 1. CONFIG & SETUP ---
 api_key = st.secrets.get("GOOGLE_GEMINI_API_KEY", None)
 if api_key:
     genai.configure(api_key=api_key)
 
-# Local storage path
 DATA_FILE = Path(__file__).resolve().parent / "reports.json"
+POLICY_FILE = Path(__file__).resolve().parent / "policy_kb.json"
 
-# Local storage helpers with robust error handling for cloud environments
 def load_report_history():
     if DATA_FILE.exists():
         try:
             with DATA_FILE.open("r", encoding="utf-8") as fh:
                 return json.load(fh)
-        except (json.JSONDecodeError, OSError):
-            return []
+        except: return []
     return []
 
-def save_report(report_entry):
+def load_policy_kb():
     try:
-        history = load_report_history()
-        history.append(report_entry)
-        with DATA_FILE.open("w", encoding="utf-8") as fh:
-            json.dump(history, fh, indent=2)
-        return True
-    except OSError as e:
-        # Cloud environments (like Streamlit Cloud) might block local file writing.
-        # This prevents the app from crashing entirely.
-        print(f"File writing blocked by cloud environment: {e}")
-        return False
+        with open(POLICY_FILE, "r") as f:
+            return json.load(f)
+    except: return {"General": "Follow standard company conduct."}
 
-# 1. Page Configuration
-st.set_page_config(
-    page_title="Awaaz AI - Anonymous Misconduct Reporting",
-    page_icon="A",
-    layout="wide"
-)
+policy_kb = load_policy_kb()
+report_history = load_report_history()
+
+# --- 2. PAGE CONFIG ---
+st.set_page_config(page_title="Awaaz AI", layout="wide")
 
 st.markdown("""
     <style>
-    /* 1. Global Page Background */
-    [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
-        background-color: #041736 !important;
-    }
-
-    /* 2. All Text Color - Global Force */
-    .stApp, p, div, label, h1, h2, h3, .stMetric, .stSidebar, span, li {
-        color: #eaffb8 !important;
-    }
-
-    /* 3. Cards */
-    .card {
-        background-color: #0d2d5e !important;
-        padding: 25px !important;
-        border-radius: 12px !important;
-        border: 1px solid #d9ed91 !important;
-        margin-bottom: 20px !important;
-    }
-
-    /* 4. Input Fields, Selectboxes, and Textareas */
-    [data-baseweb="select"] > div, 
-    [data-baseweb="base-input"] > div,
-    textarea, 
-    div[role="combobox"] {
-        background-color: #041736 !important;
-        color: #eaffb8 !important;
-        border: 1px solid #d9ed91 !important;
-    }
-
-    /* 5. Dropdown Menu Background Fix */
-    div[role="listbox"] {
-        background-color: #0d2d5e !important;
-    }
-    div[role="option"] {
-        color: #eaffb8 !important;
-    }
-
-    /* 6. Button Fix */
-    button {
-        background-color: #d9ed91 !important;
-        color: #041736 !important;
-        font-weight: bold !important;
-    }
-
-    /* 7. Label Fix */
-    label {
-        color: #d9ed91 !important; 
-        font-weight: 600 !important;
-    }
+    [data-testid="stAppViewContainer"], [data-testid="stSidebar"] { background-color: #041736 !important; }
+    .stApp, p, div, label, h1, h2, h3, .stMetric, .stSidebar, span, li { color: #eaffb8 !important; }
+    .card { background-color: #0d2d5e !important; padding: 25px !important; border-radius: 12px !important; border: 1px solid #d9ed91 !important; margin-bottom: 20px !important; }
+    button { background-color: #d9ed91 !important; color: #041736 !important; font-weight: bold !important; }
+    label { color: #d9ed91 !important; font-weight: 600 !important; }
     </style>
 """, unsafe_allow_html=True)
 
-def pill_badge(text, bg="#EFF6FF", color="#1E3A8A"):
-    return (
-        f"<span style='display:inline-block;padding:6px 12px;border-radius:999px;"
-        f"background:{bg};color:{color};font-weight:700;font-size:13px;'>{text}</span>"
-    )
-
-report_history = load_report_history()
-
-department_counts = {}
-for item in report_history:
-    dept = item.get("department")
-    if dept:
-        department_counts[dept] = department_counts.get(dept, 0) + 1
-repeated_departments = sum(1 for count in department_counts.values() if count >= 2)
-
-# Sidebar
-with st.sidebar:
-    st.markdown("## Awaaz AI")
-    st.caption("Safe Voice for Employees")
-    st.markdown("---")
-
-    if not api_key:
-        st.error("Gemini API key not found. Please add GOOGLE_GEMINI_API_KEY to Streamlit secrets and restart the app.")
-
-    st.markdown("---")
-    st.markdown("**Portal Statistics**")
-    st.metric("Total Reports Filed", f"{len(report_history)} case(s) logged")
-    st.metric("Departments Flagged", f"{repeated_departments} with repeated complaints")
-    st.metric("Identity Privacy Rate", "100% Secure")
-    st.markdown("---")
-    st.caption("Microsoft Hackathon 2026")
-
-# Main dashboard header
-st.markdown('<h1 style="text-align:center;color:#1E3A8A;font-weight:800;margin-bottom:8px;">🛡️ Awaaz AI</h1>', unsafe_allow_html=True)
-
-# Main dashboard tabs
+# --- 3. UI LOGIC ---
+st.markdown('<h1 style="text-align:center;">🛡️ Awaaz AI</h1>', unsafe_allow_html=True)
 tab1, tab2 = st.tabs(["📝 File Report", "📊 Track Progress"])
 
 with tab1:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("### File an Anonymous Workplace Report")
-    st.markdown("Apna masla safely darj karein. Hamara AI aap ka naam mita kar auto-report banayega.")
+    col1, col2 = st.columns(2)
+    with col1:
+        user_message = st.text_area("Write your issue:", height=150)
+        department = st.selectbox("Department:", ["Select", "Sales", "Engineering", "HR", "Legal", "Other"])
+        send_to = st.selectbox("Send to:", ["Compliance Committee", "HR", "Board"])
+        submit_btn = st.button("Process Report")
+    
+    with col2:
+        if submit_btn and user_message and department != "Select":
+            with st.spinner("AI analyzing compliance..."):
+                try:
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    prompt = f"""
+                    You are a Foundry IQ Compliance Agent. 
+                    Grounding Knowledge: {json.dumps(policy_kb)}.
+                    Output JSON ONLY: {{"redacted_text": "...", "severity_score": "...", "policy_mapping": "..."}}
+                    Complaint: {user_message}
+                    """
+                    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+                    parsed = json.loads(response.text)
+                    
+                    st.success("Report Generated!")
+                    st.write(f"**Policy Mapped:** {parsed['policy_mapping']}")
+                    st.write(f"**Severity:** {parsed['severity_score']}")
+                    
+                    # Save logic
+                    new_report = {"case_id": f"AWZ-{secrets.token_hex(4).upper()}", "department": department, "severity": parsed['severity_score'], "policy": parsed['policy_mapping']}
+                    # (Add save logic here as per your previous code)
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
-    left_panel, right_panel = st.columns([1, 1])
-
-    with left_panel:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        lang_selection = st.radio(
-            "Choose Language / Language Select Karein:",
-            ["Roman Urdu / Urdu (رومن اردو)", "English Only"],
-            horizontal=True,
-        )
-
-        voice_enabled = st.checkbox("Submit a voice note instead of text")
-        user_message = ""
-
-        if voice_enabled:
-            audio_data = st.audio_input("Record your voice note safely:")
-            st.markdown(
-                "<div class='recording-wrap'><div class='recording-bar'><div class='recording-indicator'></div></div></div>",
-                unsafe_allow_html=True,
-            )
-            if audio_data is not None:
-                user_message = (
-                    "User uploaded an audio report regarding supervisor harassment, "
-                    "forced late night shifts, and workspace intimidation."
-                )
-                st.info("Voice note received and being processed.")
-        else:
-            user_message = st.text_area(
-                "Write your issue here / Apna masla detail se yahan likhein:",
-                height=150,
-                placeholder=(
-                    "E.g., Mera manager Asif mujhe kafi tang karta hai aur hamesha extra hours "
-                    "kaam karne ka bolta hai. Mera naam Sarah hai..."
-                ),
-            )
-
-        department = st.selectbox(
-            "Which department does this issue come from? / Kis department ka masla hai:",
-            [
-                "Select your department",
-                "Sales",
-                "Engineering",
-                "Operations",
-                "Customer Support",
-                "Finance",
-                "Human Resources",
-                "Legal",
-                "Facilities",
-                "Other",
-            ],
-            help="Anonymous department information is used only for pattern detection and not to identify individuals.",
-        )
-
-        send_to = st.selectbox(
-            "Where should we send this report?",
-            [
-                "Direct Compliance Committee (Bypasses Local HR entirely)",
-                "General HR Department",
-                "Company Directors Board",
-            ],
-        )
-
-        submit_btn = st.button("Process and Generate Report", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with right_panel:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("### Generated HR Report Preview")
-        output_container = st.container(border=True)
-
-        if submit_btn and user_message and department != "Select your department":
-            with output_container:
-                with st.spinner("AI is removing names and formatting the text..."):
-                    if not api_key:
-                        st.error("Cannot process report: Gemini API key missing. Add GOOGLE_GEMINI_API_KEY to Streamlit secrets.")
-                    else:
-                        final_text_report = None
-                        final_severity = None
-                        final_policy = None
-                        
-                        try:
-                            easy_prompt = f"""
-                            You are a helpful HR Compliance officer. Analyze this raw workplace complaint.
-
-                            Tasks:
-                            1. Translate the main complaint clearly into simple, professional, corporate English. Keep sentences simple and easy to understand.
-                            2. Remove all personal identifiers like names of people, cities, or direct contact details. Replace them EXACTLY with structural HTML tags: '<span class=\"redacted-tag\">[EMPLOYEE]</span>', '<span class=\"redacted-tag\">[SUPERVISOR]</span>', or '<span class=\"redacted-tag\">[LOCATION]</span>'.
-                            3. Set Severity Level as either HIGH, MEDIUM, or LOW.
-                            4. Identify which standard workplace policy this violates (e.g., Anti-Harassment Guidelines, Fair Labor Standards Code).
-
-                            You MUST reply ONLY in this strict JSON format:
-                            {{
-                                "redacted_text": "simple english report text here",
-                                "severity_score": "HIGH or MEDIUM or LOW",
-                                "policy_mapping": "policy rule name"
-                            }}
-
-                            Complaint Text: {user_message}
-                            """
-
-                            model = genai.GenerativeModel('gemini-2.5-flash')
-                            # Forcing JSON output structure from Gemini API
-                            response = model.generate_content(
-                                easy_prompt,
-                                generation_config={"response_mime_type": "application/json"}
-                            )
-
-                            parsed_data = json.loads(response.text.strip())
-                            final_text_report = parsed_data.get("redacted_text", "")
-                            final_severity = parsed_data.get("severity_score", "").upper()
-                            final_policy = parsed_data.get("policy_mapping", "")
-                        except Exception as e:
-                            st.error(f"AI processing error: {e}")
-
-                        if not final_text_report:
-                            st.error("AI did not return a valid report. Please try again later.")
-                        else:
-                            case_id = f"AWZ-{secrets.token_hex(4).upper()}"
-                            st.markdown(f"##### **Case ID:** `{case_id}`")
-                            st.markdown(f"**Sent To:** `{send_to}`")
-                            st.markdown(f"**Department logged:** {pill_badge(department)}", unsafe_allow_html=True)
-                            st.markdown("---")
-                            st.markdown("**Official English Report (Names Removed):**")
-                            st.markdown(final_text_report, unsafe_allow_html=True)
-                            st.markdown("---")
-
-                            if final_severity and "HIGH" in final_severity:
-                                severity_badge = pill_badge("HIGH", bg="#FEF2F2", color="#991B1B")
-                                severity_copy = "Serious issue detected - Action required."
-                            elif final_severity and "MEDIUM" in final_severity:
-                                severity_badge = pill_badge("MEDIUM", bg="#FEF3C7", color="#92400E")
-                                severity_copy = "Review within 48 hours."
-                            else:
-                                severity_badge = pill_badge("LOW", bg="#DCFCE7", color="#065F46")
-                                severity_copy = "Logged for record."
-
-                            st.markdown(
-                                f"<div style='margin-bottom:18px; font-size:14px; line-height:1.6;'>"
-                                f"<strong>Severity:</strong> {severity_badge} — {severity_copy}</div>",
-                                unsafe_allow_html=True,
-                            )
-
-                            st.markdown(
-                                f"<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS tunnel to the <strong>{send_to}</strong> compliance mail server.</div>",
-                                unsafe_allow_html=True,
-                            )
-
-                            same_dept_count = sum(1 for item in report_history if item.get("department") == department)
-                            if same_dept_count >= 2:
-                                st.warning(
-                                    f"Pattern Alert: There are now {same_dept_count + 1} total anonymous reports from {department}. "
-                                    "Multiple complaints from the same department may indicate an emerging workplace issue."
-                                )
-                            elif same_dept_count == 1:
-                                st.info(
-                                    f"One prior complaint from {department} has already been recorded. "
-                                    "This helps compliance detect repeat patterns earlier."
-                                )
-                            else:
-                                st.success(f"No prior anonymous reports from {department} are currently logged.")
-
-                            st.markdown(f"""
-                            <div class='crypto-container'>
-                                <b>Database Status:</b> Securely Encrypted and Safe.<br>
-                                User IP logs dropped automatically.
-                            </div>
-                            """, unsafe_allow_html=True)
-
-                            st.markdown(f"""
-                            <div class='iq-container'>
-                                <b>Microsoft Foundry IQ Alignment:</b><br>
-                                Cross-verified against company policy documentation: <u>{final_policy}</u>.
-                            </div>
-                            """, unsafe_allow_html=True)
-
-                            st.markdown("---")
-                            st.markdown(
-                                f"<div class='token-box'><b>Track Anonymously:</b><br>"
-                                f"Send the text token <b>'{case_id}'</b> to our company bot to check progress without revealing your name.</div>",
-                                unsafe_allow_html=True,
-                            )
-
-                            save_report({
-                                "case_id": case_id,
-                                "department": department,
-                                "severity": final_severity,
-                                "policy": final_policy,
-                            })
-        elif submit_btn and not user_message:
-            with output_container:
-                st.error("Please enter a complaint before submitting.")
-        elif submit_btn and department == "Select your department":
-            with output_container:
-                st.error("Please select the department or choose 'Other' before submitting.")
-        else:
-            with output_container:
-                st.info("Form is ready. Please type your complaint on the left and click 'Process' to see the secure compliance file preview here.")
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with tab2:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("### Track Progress")
-    st.markdown("**Dashboard Overview**")
-    st.markdown(f"- Total reports filed: **{len(report_history)}**")
-    st.markdown(f"- Departments flagged with repeated complaints: **{repeated_departments}**")
-    st.markdown(f"- Identity Privacy Rate: **100% Secure**")
-    st.markdown("---")
-    st.markdown("**Recent Case History**")
-    if report_history:
-        for item in report_history[-5:]:
-            case_id = item.get("case_id", "N/A")
-            dept = item.get("department", "N/A")
-            severity = item.get("severity", "N/A")
-            policy = item.get("policy", "N/A")
-            st.markdown(f"- `{case_id}` | Department: {dept} | Severity: {severity} | Policy: {policy}")
-    else:
-        st.info("No cases have been filed yet.")
-    st.markdown('</div>', unsafe_allow_html=True)
+# (Baaki ka tab2 ka code yahan waise hi rehne do)
