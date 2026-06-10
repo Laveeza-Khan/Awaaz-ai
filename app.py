@@ -38,7 +38,7 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* 1. Main Background */
+    /* 1. Page Background (Dark Blue) */
     [data-testid="stAppViewContainer"] {
         background-color: #041736 !important;
     }
@@ -48,23 +48,29 @@ st.markdown("""
         background-color: #041736 !important;
     }
 
-    /* 3. Text Color (Slightly lighter than pure white for professional look) */
-    .stApp, p, div, label, h1, h2, h3, .stMetric {
-        color: #FFFFFF !important;
+    /* 3. Text Color (The exact Soft Green/Cream color from your picture) */
+    .stApp, p, div, label, h1, h2, h3, .stMetric, .stSidebar, span {
+        color: #eaffb8 !important;
     }
 
-    /* 4. Card Styling (The boxes in your UI) */
+    /* 4. Card Styling (Slightly darker blue for contrast) */
     .card {
-        background-color: #0a2550 !important;
+        background-color: #0d2d5e !important;
         padding: 25px !important;
         border-radius: 12px !important;
-        border: 1px solid #1e407c !important;
+        border: 1px solid #d9ed91 !important;
         margin-bottom: 20px !important;
     }
     
     /* 5. Sidebar Text Color Fix */
     [data-testid="stSidebar"] * {
-        color: #FFFFFF !important;
+        color: #eaffb8 !important;
+    }
+
+    /* 6. Button and Input field text fix */
+    .stButton>button {
+        color: #041736 !important;
+        background-color: #eaffb8 !important;
     }
     </style>
 """, unsafe_allow_html=True)
