@@ -291,7 +291,9 @@ with tab1:
                             )
 
                             st.markdown(
-                                f"<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS tunnel to the [...]
+                                f"""<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS TLS tunnel to the compliance mail server.
+                            </div>
+                            """,
                                 unsafe_allow_html=True,
                             )
 
