@@ -2,7 +2,7 @@
 A safe, anonymous, and secure platform for employees to report misconduct using AI. Built for the Microsoft Hackathon 2026.
 
 ## 🎥 Demo Video
-[Click here to watch the Awaaz AI Demo]_https://drive.google.com/file/d/1nw6YhpufkjPjbScjd7As0SOpO71KR3Ne/view?usp=sharing
+[Click here to watch the Awaaz AI Demo]_(https://drive.google.com/file/d/1nw6YhpufkjPjbScjd7As0SOpO71KR3Ne/view?usp=sharing)
 
 ## 🛠️ Tech Stack
 - Python / Streamlit
