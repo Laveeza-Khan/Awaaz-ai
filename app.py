@@ -45,7 +45,7 @@ def save_report(report_entry):
 # API call karte waqt ye logic lagao - Retry function for API quota handling
 def generate_report_with_retry(prompt, max_retries=3):
     """Generate report with retry logic for API quota errors"""
-   model = genai.GenerativeModel('gemini-3.5-flash')
+    model = genai.GenerativeModel('gemini-3.5-flash')
     
     for i in range(max_retries):
         try:
