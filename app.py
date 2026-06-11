@@ -2,6 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import json
 import secrets
+import time
 from pathlib import Path
 
 # Load key from Streamlit native secrets
@@ -39,6 +40,33 @@ def save_report(report_entry):
         return True
     except OSError:
         return False
+
+
+# API call karte waqt ye logic lagao - Retry function for API quota handling
+def generate_report_with_retry(prompt, max_retries=3):
+    """Generate report with retry logic for API quota errors"""
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    for i in range(max_retries):
+        try:
+            response = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"},
+            )
+            return response
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "quota" in error_str.lower():
+                if i < max_retries - 1:
+                    wait_time = 40  # 40 second ka wait
+                    print(f"Quota exceeded, waiting {wait_time}s... (Attempt {i+1}/{max_retries})")
+                    time.sleep(wait_time)
+                else:
+                    raise e
+            else:
+                raise e
+    
+    return None
 
 
 # 1. Page Configuration
@@ -195,7 +223,7 @@ with tab1:
 
                             Tasks:
                             1. Translate the main complaint clearly into simple, professional, corporate English. Keep sentences simple and easy to understand.
-                            2. Remove all personal identifiers like names of people, cities, or direct contact details. Replace them EXACTLY with structural HTML tags: '<span class=\"redacted-tag\">[EMPLOYEE]</span>', '<span class=\"redacted-tag\">[SUPERVISOR]</span>', or '<span class=\"redacted-tag\">[LOCATION]</span>'.
+                            2. Remove all personal identifiers like names of people, cities, or direct contact details. Replace them EXACTLY with structural HTML tags: '<span class=\"redacted-tag\">[E[...]
                             3. Set Severity Level as either HIGH, MEDIUM, or LOW.
                             4. Identify which standard workplace policy this violates (e.g., Anti-Harassment Guidelines, Fair Labor Standards Code).
 
@@ -209,18 +237,21 @@ with tab1:
                             Complaint Text: {user_message}
                             """
 
-                            model = genai.GenerativeModel('gemini-3.5-flash')
-                            response = model.generate_content(
-                                easy_prompt,
-                                generation_config={"response_mime_type": "application/json"},
-                            )
+                            # Use retry logic for API calls
+                            response = generate_report_with_retry(easy_prompt)
 
-                            clean_json = response.text.strip().replace("```json", "").replace("```", "")
-                            parsed_data = json.loads(clean_json)
+                            if response is None:
+                                st.error("AI failed to generate response after retries. Please try again later.")
+                                final_text_report = None
+                                final_severity = None
+                                final_policy = None
+                            else:
+                                clean_json = response.text.strip().replace("```json", "").replace("```", "")
+                                parsed_data = json.loads(clean_json)
 
-                            final_text_report = parsed_data.get("redacted_text", "")
-                            final_severity = parsed_data.get("severity_score", "").upper()
-                            final_policy = parsed_data.get("policy_mapping", "")
+                                final_text_report = parsed_data.get("redacted_text", "")
+                                final_severity = parsed_data.get("severity_score", "").upper()
+                                final_policy = parsed_data.get("policy_mapping", "")
                         except Exception as e:
                             status_code = getattr(e, 'code', None) or getattr(e, 'status_code', None)
                             if status_code in (400, 401):
@@ -260,7 +291,7 @@ with tab1:
                             )
 
                             st.markdown(
-                                f"<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS tunnel to the <strong>{send_to}</strong> compliance mail server.</div>",
+                                f"<div class='hr-routing-card'><strong>Automatic Routing Triggered:</strong> Encrypted PDF payload successfully generated and securely dispatched via TLS tunnel to the [...]
                                 unsafe_allow_html=True,
                             )
 
